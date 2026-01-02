@@ -548,6 +548,22 @@ if pgrep -f web_server.py > /dev/null; then
     WEB_URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' /workspace/tunnel-5000.log | head -1)
     WS_URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' /workspace/tunnel-8888.log | head -1)
 
+    # Convert HTTPS to WSS for WebSocket
+    WSS_URL=$(echo $WS_URL | sed 's/https:/wss:/')
+
+    # Update web_server.py with correct WebSocket URL
+    echo "Updating WebSocket URL in web_server.py..."
+    sed -i "s|ws://localhost:8888|$WSS_URL|g" /workspace/Deep-Live-Cam/web_server.py
+
+    # Restart server with new WebSocket URL
+    echo "Restarting server with Cloudflare WebSocket URL..."
+    pkill -f web_server.py 2>/dev/null || true
+    sleep 2
+    cd /workspace/Deep-Live-Cam
+    nohup python3 web_server.py > server.log 2>&1 &
+    echo $! > server.pid
+    sleep 10
+
     # Save URLs to file
     cat > /workspace/DEEP-LIVE-CAM-URLS.txt << URLS_EOF
 ========================================
