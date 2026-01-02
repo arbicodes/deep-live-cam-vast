@@ -51,6 +51,11 @@ pip install -r requirements.txt 2>/dev/null || true
 echo "  - Installing essential packages..."
 pip install --ignore-installed flask flask-cors websockets insightface onnxruntime-gpu opencv-python numpy
 
+# Fix ONNX compatibility issue
+echo "  - Fixing ONNX version..."
+pip uninstall -y onnx 2>/dev/null || true
+pip install onnx==1.16.0
+
 # Step 5: Verify CUDA Setup
 echo "[5/9] Verifying CUDA setup..."
 python3 -c "import onnxruntime; print('ONNXRuntime:', onnxruntime.__version__); print('Providers:', onnxruntime.get_available_providers())"
