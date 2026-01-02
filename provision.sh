@@ -518,13 +518,67 @@ sleep 15
 # Verify server started
 if pgrep -f web_server.py > /dev/null; then
     echo ""
+    echo "✅ Server started successfully!"
+    echo ""
+
+    # Install and setup Cloudflare tunnels
+    echo "========================================="
+    echo "Setting up Cloudflare tunnels..."
+    echo "========================================="
+
+    # Install cloudflared
+    if ! command -v cloudflared &> /dev/null; then
+        echo "Installing cloudflared..."
+        wget -q https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+        dpkg -i cloudflared-linux-amd64.deb
+        rm cloudflared-linux-amd64.deb
+    fi
+
+    # Start tunnel for port 5000 (HTTP)
+    echo "Starting tunnel for port 5000..."
+    nohup cloudflared tunnel --url http://localhost:5000 > /workspace/tunnel-5000.log 2>&1 &
+    sleep 5
+
+    # Start tunnel for port 8888 (WebSocket)
+    echo "Starting tunnel for port 8888..."
+    nohup cloudflared tunnel --url http://localhost:8888 > /workspace/tunnel-8888.log 2>&1 &
+    sleep 5
+
+    # Extract URLs from logs
+    WEB_URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' /workspace/tunnel-5000.log | head -1)
+    WS_URL=$(grep -oP 'https://[a-z0-9-]+\.trycloudflare\.com' /workspace/tunnel-8888.log | head -1)
+
+    # Save URLs to file
+    cat > /workspace/DEEP-LIVE-CAM-URLS.txt << URLS_EOF
+========================================
+DEEP LIVE CAM - PUBLIC URLs
+========================================
+
+🌐 WEB INTERFACE (share this with friends):
+$WEB_URL
+
+🔌 WEBSOCKET STREAM:
+$WS_URL
+
+Note: These URLs change each time you restart!
+To get new URLs: cat /workspace/DEEP-LIVE-CAM-URLS.txt
+
+========================================
+URLS_EOF
+
+    echo ""
     echo "✅✅✅ SETUP COMPLETE! ✅✅✅"
     echo ""
-    echo "To get your public link, run this command:"
+    echo "========================================="
+    echo "🌐 YOUR PUBLIC LINK:"
+    echo "========================================="
     echo ""
-    echo "    /workspace/get-link.sh"
+    echo "$WEB_URL"
     echo ""
-    echo "Or use the Instance Portal 'Open' button to add Cloudflare tunnels!"
+    echo "Share this link with anyone!"
+    echo ""
+    echo "Full details: cat /workspace/DEEP-LIVE-CAM-URLS.txt"
+    echo "========================================="
     echo ""
 else
     echo ""
