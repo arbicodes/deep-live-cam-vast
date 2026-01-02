@@ -1,5 +1,4 @@
 #!/bin/bash
-set -e
 
 echo "========================================="
 echo "Deep Live Cam - Automated Setup"
